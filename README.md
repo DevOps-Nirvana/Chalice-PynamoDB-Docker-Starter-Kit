@@ -2,14 +2,13 @@
 
 This code is/was originally from: [Chalice-PynamoDB-Docker-Starter-Kit](https://github.com/DevOps-Nirvana/Chalice-PynamoDB-Docker-Starter-Kit/)
 
-This repo makes a great bootstrap/starter kit to help you get started with AWS's [DynamoDB](https://aws.amazon.com/dynamodb/), Python's [PynamoDB](https://github.com/pynamodb/PynamoDB/), and [AWS's Chalice](https://github.com/aws/chalice) quickly which orchestrates creating and deploying an REST API on [AWS Lambda](https://aws.amazon.com/lambda/) and [AWS API Gateway](https://aws.amazon.com/api-gateway/) via [Chalice](https://github.com/aws/chalice).  Combined, this makes an easy to use boilerplate for architecting an application on AWS using technologies that are serverless-friendly and operate at very little cost.
+This repo makes a great boilerplate/foundation/bootstrap/starter kit to help you get started with AWS's [DynamoDB](https://aws.amazon.com/dynamodb/), Python's [PynamoDB](https://github.com/pynamodb/PynamoDB/), and [AWS's Chalice](https://github.com/aws/chalice) quickly which orchestrates creating and deploying an REST API on [AWS Lambda](https://aws.amazon.com/lambda/) and [AWS API Gateway](https://aws.amazon.com/api-gateway/).  Combined, this makes an easy to use boilerplate for architecting an application on AWS using technologies that are serverless-friendly and operate at very little cost.
 
-This is my personal boilerplate for numerous personal and professional serverless applications on AWS.
+This is my personal boilerplate for numerous personal and professional serverless applications on AWS.  This repository is an example of my work and of numerous best-practices of both my own and of the industry.
 
-This repository is an example of my work and of numerous best-practices of both my own and of the industry
- * [Dockerfile best-practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/) see [Dockerfile](./Dockerfile)
- * Docker Compose best-practices for ease of understanding, support, development, migrations, services, health checks, auto-restarting upon failures, auto-reload upon code changes, and keeping your Docker Compose file as DRY as possible with all the features and complexity with [YAML anchors](https://www.educative.io/blog/advanced-yaml-syntax-cheatsheet#anchors).  See [docker-compose.yml](./docker-compose.yml)
- * An example of using Python, ORM, Models, [AWS DynamoDB](https://aws.amazon.com/dynamodb/), [PynamoDB](https://github.com/pynamodb/PynamoDB/), [AWS Chalice](https://github.com/aws/chalice)
+ * An example of [Dockerfile best-practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/) see [Dockerfile](./Dockerfile)
+ * An example of Docker Compose best-practices for ease of understanding, support, development, migrations, services, health checks, auto-restarting upon failures, auto-reload upon code changes, and keeping your Docker Compose file as DRY as possible with all the features and complexity with [YAML anchors](https://www.educative.io/blog/advanced-yaml-syntax-cheatsheet#anchors).  See [docker-compose.yml](./docker-compose.yml)
+ * An example of using Python, an ORM layer, models, [AWS DynamoDB](https://aws.amazon.com/dynamodb/) via [PynamoDB](https://github.com/pynamodb/PynamoDB/), [AWS Chalice](https://github.com/aws/chalice)
 
 
 ## Requirements
@@ -21,10 +20,10 @@ Because of Docker, you don't even need to have Python installed, all you need is
 
 ## How to use this repo
 
-There are 2 modes in which you can run the application in...
+There are 2 modes in which you can run the application in, primarily though, this codebase is meant for local docker development and experimentation.
 
 ### 1. Docker-Compose Local Development Mode
-Using Docker Compose we can run a local development version of the entire stack, the main purpose of this codebase.  This will spin up the various services needed such as an SMTP server, DynamoDB server, an DynamoDB web admin, run database migrations, and then startup our application.
+With Docker Compose we can run a local development version of the entire stack, the main purpose of this codebase.  This will spin up the various services needed such as an SMTP server, S3 Server (optional/disabled), DynamoDB server, an DynamoDB web admin, run database migrations, and then startup our application.
 
 ```bash
 # Simply run this if you installed Docker Compose as a plugin
@@ -58,6 +57,20 @@ curl --verbose --location -X PATCH "http://localhost:8002/users/PASTEIDHERE" --h
 # To show DELETE works
 curl --verbose --location -X DELETE "http://localhost:8002/users/PASTEIDHERE"
 ```
+
+
+# What this codebase does
+* It adds some Django-like fixtures to the PynamoDB Model metadata `required_fields, read_only_fields, validate_fields` via [BaseModel](https://github.com/DevOps-Nirvana/Chalice-PynamoDB-Docker-Starter-Kit/blob/master/models/BaseModel.py)
+* A classmethod helper to create from a dictionary automatically, respecting private/require fields (eg: for POST via REST endpoint)
+* A helper to set attributes based on an input dict (with input validation)
+* A classmethod helper to search through a GSI (GlobalSecondaryIndex) on this model, provided you follow the naming scheme of columnname__index
+
+
+# What this codebase doesn't do
+* It's very barebones in its current iteration
+* It does not deal with permissions/roles/group models
+* It doesn't have any authorization, login, or API keys
+* It (currently) doesn't provide an example for deploying this into production.  What is fairly standard in the industry is to use Terraform or other Infrastructure as Code utilities to pre-create whatever resources you need (DynamoDB, SQS, etc) and pass those output/object ARNs and variables into this codebase accordingly via a configuration structure
 
 
 ## TODO

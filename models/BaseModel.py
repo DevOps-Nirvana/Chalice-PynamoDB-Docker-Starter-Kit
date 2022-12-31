@@ -8,9 +8,10 @@ class BaseModel( Model ):
     """
     Provides base model for PynamoDB models, offering the following features:
       * A simple "print" helper for development/debugging
-      * A modelClass helper for getting the child model automatically
-      * A helper to create from a dictionary automatically, respecting private/require fields
-      * A helper to set attributes based on an input dict (no validation)
+      * A classmethod modelClass helper for getting the child model or model name automatically
+      * A classmethod helper to create from a dictionary automatically, respecting private/require fields (eg: for POST via REST endpoint)
+      * A classmethod helper to search through a GSI (GlobalSecondaryIndex) on this model
+      * A helper to set attributes based on an input dict (with input validation)
     """
 
     def __repr__(self):
