@@ -1,0 +1,186 @@
+version: "3.3"
+
+services:
+
+
+  ####################################
+  # Service #1: Auto-Restarter based on Docker Health Checks
+  ####################################
+  autoheal:
+    container_name: autoheal
+    image: willfarrell/autoheal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    <<: &autoRestartOnFailure
+      deploy:
+        restart_policy:
+          condition: on-failure
+          max_attempts: 10
+
+
+  ####################################
+  # Service #2: S3 Server (if needed)
+  ####################################
+  # s3:
+  #   <<: *autoRestartOnFailure
+  #   container_name: s3
+  #   image: "scireum/s3-ninja"
+  #   platform: linux/x86_64 # Helps ensure consistency even when used on an M1 Mac
+  #   ports:
+  #     - 4566:4566
+  #   volumes:
+  #     - ./.s3/data:/home/sirius/data
+  #     - ./.s3.conf:/home/sirius/app/application.conf
+
+
+  ####################################
+  # Service #3: SMTP Mail server (if needed)
+  ####################################
+  smtp:
+    <<: *autoRestartOnFailure
+    container_name: smtp
+    image: mailhog/mailhog
+    expose:
+      - 1025
+      - 8025
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+    healthcheck:
+      # This tests the HTTP endpoint, NOT the SMTP endpoint, but is "good enough" for now
+      test: wget http://127.0.0.1:8025/ --spider
+      interval: 6s
+      timeout: 6s
+      retries: 10
+
+
+  ####################################
+  # Service #4: DynamoDB Database
+  ####################################
+  dynamodb:
+    <<: *autoRestartOnFailure
+    container_name: dynamodb
+    image: amazon/dynamodb-local:latest
+    # To force-persist the data which is disabled by default
+    # Uncomment if needed both command: and volumes:
+    # https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DynamoDBLocal.DownloadingAndRunning.html#docker
+    command: -jar DynamoDBLocal.jar -sharedDb -dbPath /home/dynamodblocal/data/
+    volumes:
+      - /tmp/dynamodb_data:/home/dynamodblocal/data
+    ports:
+      - "8000:8000"
+    healthcheck:
+      # Note: This doesn't check really that DynamoDB is working, but it's good enough
+      test: curl http://localhost:8000
+      interval: 6s
+      timeout: 6s
+      retries: 10
+
+
+  ####################################
+  # Service #5: DynamoDB Database Web Admin / GUI (if desired)
+  ####################################
+  dynamodb-admin:
+    <<: *autoRestartOnFailure
+    container_name: dynamodb-admin
+    image: aaronshaf/dynamodb-admin
+    ports:
+      - "8001:8001"
+    depends_on:
+      dynamodb:
+        condition: service_healthy
+    healthcheck:
+      test: wget http://127.0.0.1:8001/ --spider
+      interval: 6s
+      timeout: 6s
+      retries: 10
+    environment:
+      DYNAMO_ENDPOINT: "http://dynamodb:8000"
+
+
+  ####################################
+  # Init-Container #1: Run Migrations
+  ####################################
+  # Runs migrations after our database is up...
+  migrate:
+    <<: *autoRestartOnFailure
+    container_name: migrate
+    depends_on:
+      dynamodb:
+        condition: service_healthy
+      smtp:
+        condition: service_healthy
+      # s3:
+      #   condition: service_healthy
+    entrypoint:
+      - /bin/sh
+    command:
+      - "-c"
+      - "python3 migrate.py && touch /tmp/finished-migrations && sleep 100000000000"
+    healthcheck:
+      test: ls /tmp/finished-migrations
+      interval: 5s
+      timeout: 4s
+      retries: 10
+    <<: &globalAppSettings
+      image: our-app
+      platform: linux/x86_64 # Helps ensure consistency even when used on an M1 Mac
+      working_dir: "/app"
+      build:
+        context: .
+        dockerfile: Dockerfile
+      environment:
+        # This is to cause python to instantly echo/print stuff out to stdout, not buffer
+        PYTHONDONTWRITEBYTECODE: "1"
+        PYTHONUNBUFFERED: "1"
+        # This is to send to our local SMTP "server" and gui for dev envs
+        SERVER_EMAIL: "local@mywebsite.dev"
+        SMTP_HOST: "smtp"
+        SMTP_PORT: "1025"
+        # This is to use our local dynamodb
+        DYNAMO_ENDPOINT: "http://dynamodb:8000"
+        AWS_REGION: "us-east-1"
+        AWS_ACCESS_KEY_ID: local
+        AWS_SECRET_ACCESS_KEY: local
+      volumes:
+        - type: bind
+          source: ./
+          target: /app
+
+
+  ####################################
+  # App-Container #1: API
+  ####################################
+  # NOTE: Auto-reload happens automatically as a part of the Dockerfile Chalice initialization command
+  app:
+    <<: *autoRestartOnFailure
+    <<: *globalAppSettings
+    container_name: app
+    ports:
+      - "8002:8002"
+    depends_on:
+      # Ensure our necessary services are up
+      dynamodb:
+        condition: service_healthy
+      smtp:
+        condition: service_healthy
+      # s3:
+      #   condition: service_healthy
+      # Ensure we've ran migrations
+      migrate:
+        condition: service_healthy
+    # Ensure we autoheal incase we crash hard (eg: syntax error)
+    labels:
+      autoheal: "true"
+    # Ensure our service is up and running and healthy (needed for autoheal)
+    healthcheck:
+      test: curl --fail -s http://localhost:8002/healthy || exit 1
+      start_period: 10s  # Wait 10 seconds for our app to startup before throwing health probes at it
+      interval: 5s
+      timeout: 4s
+      retries: 4
+
+
+# Save/persist our DynamoDB Data
+volumes:
+  dynamodb_data:

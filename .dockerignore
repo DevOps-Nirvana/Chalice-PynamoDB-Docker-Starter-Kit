@@ -1,0 +1,14 @@
+.git
+.git*
+.DS_Store
+deployment
+.yamllint.yaml
+Docker*
+.docker*
+.yamllint.yaml
+Makefile
+farleysearch
+phpinfo.php
+*.md
+*.MD
+.dynamodb_data
