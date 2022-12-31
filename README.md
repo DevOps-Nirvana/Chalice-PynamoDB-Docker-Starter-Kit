@@ -1,6 +1,6 @@
-# Chalice PynamoDB Docker REST API Bootstrap
+# Chalice PynamoDB Docker REST API Starter Kit
 
-This code is/was originally from: [Chalice-PynamoDB-Docker-Bootstrap](https://github.com/DevOps-Nirvana/Chalice-PynamoDB-Docker-Bootstrap/)
+This code is/was originally from: [Chalice-PynamoDB-Docker-Starter-Kit](https://github.com/DevOps-Nirvana/Chalice-PynamoDB-Docker-Starter-Kit/)
 
 This repo makes a great bootstrap/starter kit to help you get started with AWS's [DynamoDB](https://aws.amazon.com/dynamodb/), Python's [PynamoDB](https://github.com/pynamodb/PynamoDB/), and AWS's [Chalice](https://github.com/aws/chalice) quickly which orchestrates creating and deploying an REST API on AWS Lambda.  Combined, this makes a  easy to use boilerplate for architecting an application on AWS using technologies that are serverless-friendly and operate at very little cost.
 
@@ -72,7 +72,7 @@ These are various TODOs that are things that could be improved, changed, etc.  C
 
 ## Support / Author
 
-This codebase was originally authored by [Farley](https://github.com/andrewfarley/) loosely inspired by this [DynamoDB Python Docker Compose Starter Kit](https://github.com/CT83/DynamoDB-Python-Docker-Compose-Starter-Kit).  Feel free to [leave an issue](https://github.com/DevOps-Nirvana/Chalice-PynamoDB-Docker-Bootstrap/issues) on this codebase if you have any questions or problems, or feel free to email me or contact me via any of the channels below.
+This codebase was originally authored by [Farley](https://github.com/andrewfarley/) loosely inspired by this [DynamoDB Python Docker Compose Starter Kit](https://github.com/CT83/DynamoDB-Python-Docker-Compose-Starter-Kit).  Feel free to [leave an issue](https://github.com/DevOps-Nirvana/Chalice-PynamoDB-Docker-Starter-Kit/issues) on this codebase if you have any questions or problems, or feel free to email me or contact me via any of the channels below.
 
 | Author   | Contact Details                                                       |
 |----------|-----------------------------------------------------------------------|
