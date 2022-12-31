@@ -2,7 +2,7 @@
 
 This code is/was originally from: [Chalice-PynamoDB-Docker-Starter-Kit](https://github.com/DevOps-Nirvana/Chalice-PynamoDB-Docker-Starter-Kit/)
 
-This repo makes a great bootstrap/starter kit to help you get started with AWS's [DynamoDB](https://aws.amazon.com/dynamodb/), Python's [PynamoDB](https://github.com/pynamodb/PynamoDB/), and AWS's [Chalice](https://github.com/aws/chalice) quickly which orchestrates creating and deploying an REST API on AWS Lambda.  Combined, this makes a  easy to use boilerplate for architecting an application on AWS using technologies that are serverless-friendly and operate at very little cost.
+This repo makes a great bootstrap/starter kit to help you get started with AWS's [DynamoDB](https://aws.amazon.com/dynamodb/), Python's [PynamoDB](https://github.com/pynamodb/PynamoDB/), and [AWS's Chalice](https://github.com/aws/chalice) quickly which orchestrates creating and deploying an REST API on [AWS Lambda](https://aws.amazon.com/lambda/) and [AWS API Gateway](https://aws.amazon.com/api-gateway/) via [Chalice](https://github.com/aws/chalice).  Combined, this makes an easy to use boilerplate for architecting an application on AWS using technologies that are serverless-friendly and operate at very little cost.
 
 This is my personal boilerplate for numerous personal and professional serverless applications on AWS.
 
@@ -68,6 +68,8 @@ These are various TODOs that are things that could be improved, changed, etc.  C
 * Add automated code to automatically create the DynamoDB tables needed for this stack
 * Add example of SQS topic usage and (ideally) automated creation
 * Make all this repo's table names automatically optionally prefixed by a "stage" name (eg: dev__modelName)
+* Add example endpoint to send an email
+* Add example endpoint to send/receive data from S3 service
 
 
 ## Support / Author
