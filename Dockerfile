@@ -16,4 +16,7 @@ COPY . .
 # And setup our default entrypoint, for local development basically only since Chalice is meant to be deployed to AWS Serverless
 # Meaning, we will never "push" this image anywhere and will never use it (eg: in Kubernetes)
 EXPOSE 8002
-ENTRYPOINT ["chalice", "local", "--host", "0.0.0.0", "--port", "8002", "--autoreload" ]
+ENTRYPOINT ["chalice", "local", "--host", "0.0.0.0", "--port", "8002", "--autoreload"]
+
+# NOTE: If we were to ever push this image for use in Kubernetes/Docker/CICD/etc we should use this instead...
+# ENTRYPOINT ["chalice", "local", "--host", "0.0.0.0", "--port", "8002"]

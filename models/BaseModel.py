@@ -1,7 +1,10 @@
 from chalice import BadRequestError
 from botocore.client import ClientError
 from pynamodb.models import Model
+from pynamodb.util import attribute_value_to_json
+import helpers
 import models
+import json
 
 
 class BaseModel( Model ):
@@ -11,14 +14,22 @@ class BaseModel( Model ):
       * A classmethod modelClass helper for getting the child model or model name automatically
       * A classmethod helper to create from a dictionary automatically, respecting private/require fields (eg: for POST via REST endpoint)
       * A classmethod helper to search through a GSI (GlobalSecondaryIndex) on this model
+      * A classmethod helper to scan through the table and return all results with a field having a value (aka, manual scan)
       * A helper to set attributes based on an input dict (with input validation)
     """
+    # class Meta:
+    #     host = helpers.get_dynamodb_endpoint()
+    #     required_fields  = []
+    #     read_only_fields = ["id"]
+    #     validate_fields  = {}
+
 
     def __repr__(self):
         """
         Simple "print" object helper
         """
-        return "{}({}): {}".format(__class__, self.id, self.to_json())
+        return "{}({})".format(self.__class__, self.id)
+        # return "{}({}): {}".format(__class__, self.id, self.to_json())
 
 
     @classmethod
@@ -66,7 +77,7 @@ class BaseModel( Model ):
 
 
     @classmethod
-    def getByIndex(self, field_name, search_query):
+    def getByIndex(self, field_name, search_query, max_results=1):
         """
         Class method helper to search this model for a record automatically by an indexed field (via an GlobalSecondaryIndex)
         """
@@ -77,20 +88,66 @@ class BaseModel( Model ):
         except AttributeError as e:
             raise AttributeError(f"Field {field_name} does not have an index")
 
-        # Trying to search through this index, returning the first valid value
-        for item in index_to_search.query(search_query):
-            return item
-        raise ClientError({'Error': {'Code': 'ResourceNotFoundException', 'Message': 'Not Found'}}, "getByIndex")
+        # Trying to search through this index, returning a single value if requested (default) otherwise a list view
+        # if singular requested and failed, raises exception
+        output = []
+        for item in index_to_search.query(search_query, page_size=max_results):
+            output.append(item)
+        if max_results == 1:
+            if len(output) >= 1:
+                return output[0]
+            raise ClientError({'Error': {'Code': 'ResourceNotFoundException', 'Message': 'Not Found'}}, "getByIndex")
+        return output
 
 
-    def set_attributes(self, dict):
+    def set_attributes(self, dict) -> None:
         """
         Simple update/set-attributes helper, validating fields as we go
         """
         for key in dict:
+            # If we wish to validate fields
             if hasattr(self.Meta, "validate_fields"):
                 if key in self.Meta.validate_fields:
                     validator = self.Meta.validate_fields[key]
                     if not validator(dict[key]):
                         raise BadRequestError(f'Field has invalid syntax/value: {key}')
-            self.attribute_values[key] = dict[key]
+            # If we have a setter helper
+            if hasattr(self, f"set_{key}"):
+                setter = getattr(self, f"set_{key}")
+                setter(dict[key])
+            else:
+                # Otherwise just set the value
+                self.attribute_values[key] = dict[key]
+
+
+    def to_json_safe(self) -> str:
+        """
+        Simple output helper, but only the desired fields to serialize
+        """
+        # If we only want specific fields, use our conditional
+        if hasattr(self.Meta, "serialized_fields"):
+            # Original, copied from PynamoDB/models.py:1141 (to_json(self)), just added conditional
+            return json.dumps({k: attribute_value_to_json(v) for k, v in self.serialize().items() if k in self.Meta.serialized_fields})
+        # Otherwise, use our default serializer
+        return self.to_json()
+
+
+    @classmethod
+    def getByField(self, field_name, search_query, max_results=1):
+        # Try to get the field name's index if we can
+        try:
+            model_class = self.getModelClass()
+            field_to_search = getattr(model_class, field_name)
+        except AttributeError as e:
+            raise AttributeError(f"Field {field_name} does not exist")
+
+        # Trying to search through this index, returning a single value if requested (default) otherwise a list view
+        # if singular requested and failed, raises exception
+        output = []
+        for item in model_class.scan(field_to_search.contains(search_query), page_size=max_results):
+            output.append(item)
+        if max_results == 1:
+            if len(output) >= 1:
+                return output[0]
+            raise ClientError({'Error': {'Code': 'ResourceNotFoundException', 'Message': 'Not Found'}}, "getByField")
+        return output

@@ -6,3 +6,4 @@ pynamodb==5.3.4
 python-dateutil==2.8.2
 PyYAML==6.0
 urllib3==1.26.13
+cryptography==39.0.0

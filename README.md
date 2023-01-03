@@ -42,20 +42,40 @@ Simply run `chalice deploy` to deploy this into your AWS account.  Your AWS CLI 
 Once your docker compose application is up, some of the following examples will highlight the features/examples/foundation in this codebase
 
 ```bash
-# Trying an invalid email, showing solid exception handling
-curl --verbose --location -X POST "http://localhost:8002/users" --header 'Content-Type: application/json' --data-raw '{"sid": "test", "email": "invalid.email.address"}'
+# Trying to create a user with missing data
+curl --verbose --location -X POST "http://localhost:8002/users" --header 'Content-Type: application/json' --data-raw '{"email": "invalid.email.address", "password": "test"}'
+# Trying an invalid email, showing exception handling
+curl --verbose --location -X POST "http://localhost:8002/users" --header 'Content-Type: application/json' --data-raw '{"email": "invalid.email.address", "password": "test", "name": "tester"}'
 # Trying with an valid email...
-curl --verbose --location -X POST "http://localhost:8002/users" --header 'Content-Type: application/json' --data-raw '{"sid": "test", "email": "1234567891123222@test.com"}'
-# To show GET works, copy/paste the ID from above
-curl --verbose --location "http://localhost:8002/users/PASTEIDHERE"
-# To show patch/put works, copy/paste the ID from above into this
-curl --verbose --location -X PATCH "http://localhost:8002/users/PASTEIDHERE" --header 'Content-Type: application/json' --data-raw '{"email": "new@new.com"}'
-# To show error handling works, try patch with an invalid id
-curl --verbose --location -X PATCH "http://localhost:8002/users/invalid_id" --header 'Content-Type: application/json' --data-raw '{"email": "new@new.com"}'
+curl --verbose --location -X POST "http://localhost:8002/users" --header 'Content-Type: application/json' --data-raw '{"email": "user@test.com", "password": "test", "name": "tester"}'
+curl --verbose --location -X POST "http://localhost:8002/users" --header 'Content-Type: application/json' --data-raw '{"email": "user2@test.com", "password": "test", "name": "tester"}'
+# To show login works, automatically put session id into variable (requires you have jq installed)
+export SESSION_ID=`curl --verbose --location -X POST "http://localhost:8002/login" --header 'Content-Type: application/json' --data-raw '{"email": "user@test.com", "password": "test"}' | jq --raw-output .id`
+export SESSION2_ID=`curl --verbose --location -X POST "http://localhost:8002/login" --header 'Content-Type: application/json' --data-raw '{"email": "user2@test.com", "password": "test"}' | jq --raw-output .id`
+# Show it worked...
+echo "Session ID 1: $SESSION_ID"
+echo "Session ID 2: $SESSION2_ID"
+# To show using an logged in endpoint works, lookup who we are without session id first...
+curl --verbose --location "http://localhost:8002/whoami" --header 'Content-Type: application/json'
+# Then try to lookup who we are with our session id, setting it into an environment variable with jq
+export USER_ID=`curl --verbose --location "http://localhost:8002/whoami" --header 'Content-Type: application/json' -H "Authorization: $SESSION_ID" | jq --raw-output .id`
+export USER2_ID=`curl --verbose --location "http://localhost:8002/whoami" --header 'Content-Type: application/json' -H "Authorization: $SESSION2_ID" | jq --raw-output .id`
+# Show it worked...
+echo "User ID 1: $USER_ID"
+echo "User ID 2: $USER2_ID"
+# To show GET works, but only for ourself...
+curl --verbose --location "http://localhost:8002/users/$USER_ID" -H "Authorization: $SESSION_ID"
+curl --verbose --location "http://localhost:8002/users/$USER2_ID" -H "Authorization: $SESSION_ID"
+# To show patch/put works, but only for ourself...
+curl --verbose --location -X PATCH "http://localhost:8002/users/$USER_ID" -H "Authorization: $SESSION_ID" --header 'Content-Type: application/json' --data-raw '{"email": "new@new.com"}'
+curl --verbose --location -X PATCH "http://localhost:8002/users/$USER2_ID" -H "Authorization: $SESSION_ID" --header 'Content-Type: application/json' --data-raw '{"email": "new@new.com"}'
+# To show error handling works, try patch with an invalid id, should return FORBIDDEN same as wrong id
+curl --verbose --location -X PATCH "http://localhost:8002/users/INVALID_VALUE" -H "Authorization: $SESSION_ID" --header 'Content-Type: application/json' --data-raw '{"email": "new@new.com"}'
 # To show input validation works on patch...
-curl --verbose --location -X PATCH "http://localhost:8002/users/PASTEIDHERE" --header 'Content-Type: application/json' --data-raw '{"email": "INVALID_EMAIL"}'
-# To show DELETE works
-curl --verbose --location -X DELETE "http://localhost:8002/users/PASTEIDHERE"
+curl --verbose --location -X PATCH "http://localhost:8002/users/$USER_ID" -H "Authorization: $SESSION_ID" --header 'Content-Type: application/json' --data-raw '{"email": "INVALID_EMAIL"}'
+# To show DELETE works, first try to delete the wrong one, then ours
+curl --verbose --location -X DELETE "http://localhost:8002/users/$USER2_ID" -H "Authorization: $SESSION_ID"
+curl --verbose --location -X DELETE "http://localhost:8002/users/$USER_ID" -H "Authorization: $SESSION_ID"
 ```
 
 
@@ -64,25 +84,26 @@ curl --verbose --location -X DELETE "http://localhost:8002/users/PASTEIDHERE"
 * A classmethod helper to create from a dictionary automatically, respecting private/require fields (eg: for POST via REST endpoint)
 * A helper to set attributes based on an input dict (with input validation)
 * A classmethod helper to search through a GSI (GlobalSecondaryIndex) on this model, provided you follow the naming scheme of columnname__index
+* A simplified example of login and using an authorizer (via API keys)
 
 
 # What this codebase doesn't do
 * It's very barebones in its current iteration
 * It does not deal with permissions/roles/group models
-* It doesn't have any authorization, login, or API keys
 * It (currently) doesn't provide an example for deploying this into production.  What is fairly standard in the industry is to use Terraform or other Infrastructure as Code utilities to pre-create whatever resources you need (DynamoDB, SQS, etc) and pass those output/object ARNs and variables into this codebase accordingly via a configuration structure
 
 
 ## TODO
 These are various TODOs that are things that could be improved, changed, etc.  Contributions are welcome for any of these, but this is mostly a personal list of things I'd like to adjust/improve in this codebase for all our sake/sanity.
 
-* Make this repo production-friendly by dynamically choosing the "host" variable intelligently (detecting if on AWS)
+* Add a "list" method/helper example to list objects
 * Add working examples of this deploying onto AWS directly
 * Add automated code to automatically create the DynamoDB tables needed for this stack
 * Add example of SQS topic usage and (ideally) automated creation
 * Make all this repo's table names automatically optionally prefixed by a "stage" name (eg: dev__modelName)
 * Add example endpoint to send an email
 * Add example endpoint to send/receive data from S3 service
+* Enable 2FA
 
 
 ## Support / Author
