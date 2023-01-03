@@ -63,6 +63,8 @@ export USER2_ID=`curl --verbose --location "http://localhost:8002/whoami" --head
 # Show it worked...
 echo "User ID 1: $USER_ID"
 echo "User ID 2: $USER2_ID"
+# To show LIST works
+curl --verbose --location "http://localhost:8002/users/" -H "Authorization: $SESSION_ID"
 # To show GET works, but only for ourself...
 curl --verbose --location "http://localhost:8002/users/$USER_ID" -H "Authorization: $SESSION_ID"
 curl --verbose --location "http://localhost:8002/users/$USER2_ID" -H "Authorization: $SESSION_ID"
@@ -84,6 +86,7 @@ curl --verbose --location -X DELETE "http://localhost:8002/users/$USER_ID" -H "A
 * A classmethod helper to create from a dictionary automatically, respecting private/require fields (eg: for POST via REST endpoint)
 * A helper to set attributes based on an input dict (with input validation)
 * A classmethod helper to search through a GSI (GlobalSecondaryIndex) on this model, provided you follow the naming scheme of columnname__index
+* A classmethod helper scan through table's column->contains (simplified)
 * A simplified example of login and using an authorizer (via API keys)
 
 
@@ -96,9 +99,8 @@ curl --verbose --location -X DELETE "http://localhost:8002/users/$USER_ID" -H "A
 ## TODO
 These are various TODOs that are things that could be improved, changed, etc.  Contributions are welcome for any of these, but this is mostly a personal list of things I'd like to adjust/improve in this codebase for all our sake/sanity.
 
-* Add a "list" method/helper example to list objects
 * Add working examples of this deploying onto AWS directly
-* Add automated code to automatically create the DynamoDB tables needed for this stack
+* Add automated code to automatically create the DynamoDB tables on AWS needed for this stack
 * Add example of SQS topic usage and (ideally) automated creation
 * Make all this repo's table names automatically optionally prefixed by a "stage" name (eg: dev__modelName)
 * Add example endpoint to send an email

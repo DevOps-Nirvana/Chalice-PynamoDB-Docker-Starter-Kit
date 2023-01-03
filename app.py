@@ -5,7 +5,7 @@ from botocore.client import ClientError
 from models.APIKey import APIKey
 from models.User import User
 import helpers
-# import copy
+import json
 
 app = Chalice(app_name='chalice-pynamodb-bootstrap')
 
@@ -91,6 +91,17 @@ def get_user(id):
         raise ForbiddenError("You do not have permissions to use this")
 
     return user.to_json_safe()
+
+
+# List all user objects (TODO: Does not support pagination)
+@app.route('/users', methods=['GET'], authorizer=validate_api_key)
+def list_user():
+    output = []
+    for item in User.scan():
+        row = item.to_dict_safe()
+        del row['email']  # Email is sensitive, lets strip it here for now, until we make something better in the BaseModel for private fields
+        output.append(row)
+    return json.dumps(output)
 
 
 # Update an user object

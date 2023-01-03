@@ -120,6 +120,19 @@ class BaseModel( Model ):
                 self.attribute_values[key] = dict[key]
 
 
+    def to_dict_safe(self) -> str:
+        """
+        Simple output helper, but only the desired fields to serialize
+        """
+        # If we only want specific fields, use our conditional
+        if hasattr(self.Meta, "serialized_fields"):
+            # Original, copied from PynamoDB/models.py:1141 (to_json(self)), just added conditional
+            return {k: attribute_value_to_json(v) for k, v in self.serialize().items() if k in self.Meta.serialized_fields}
+        # Otherwise, use our default serializer
+        return {k: attribute_value_to_json(v) for k, v in self.serialize().items()}
+
+
+
     def to_json_safe(self) -> str:
         """
         Simple output helper, but only the desired fields to serialize
