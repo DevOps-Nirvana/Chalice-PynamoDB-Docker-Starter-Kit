@@ -37,47 +37,64 @@ Simply run `chalice deploy` to deploy this into your AWS account.  Your AWS CLI 
 
 **WARNING**: If you are to use this in production/cloud mode, you will need to remove the `host = "http://dynamodb:8000"` in every model for it to be able to talk to AWS's hosted DynamoDB properly.
 
+```bash
+# First, you'll need to create the tables...
+export AWS_DEFAULT_REGION=us-west-2
+export AWS_REGION=us-west-2
+python3 migrate.py -s dev -r us-west-2
+# Then you'll deploy to the dev stage
+chalice deploy --stage dev
+# Then you should be able to paste the URL it gives you instead of OUR_URL below in examples of usage and use it!
+```
 
 ## Examples of usage
 Once your docker compose application is up, some of the following examples will highlight the features/examples/foundation in this codebase
 
 ```bash
+# If using local...
+export OUR_URL=http://localhost:8002
+# If deploying to AWS copy/paste from output of chalice deploy, minus the last /
+export OUR_URL=https://dlxlj8umy3.execute-api.us-west-2.amazonaws.com/api
+
 # Trying to create a user with missing data
-curl --verbose --location -X POST "http://localhost:8002/users" --header 'Content-Type: application/json' --data-raw '{"email": "invalid.email.address", "password": "test"}'
+curl --verbose --location -X POST "${OUR_URL}/users" --header 'Content-Type: application/json' --data-raw '{"email": "invalid.email.address", "password": "test"}'
 # Trying an invalid email, showing exception handling
-curl --verbose --location -X POST "http://localhost:8002/users" --header 'Content-Type: application/json' --data-raw '{"email": "invalid.email.address", "password": "test", "name": "tester"}'
+curl --verbose --location -X POST "${OUR_URL}/users" --header 'Content-Type: application/json' --data-raw '{"email": "invalid.email.address", "password": "test", "name": "tester"}'
 # Trying with an valid email...
-curl --verbose --location -X POST "http://localhost:8002/users" --header 'Content-Type: application/json' --data-raw '{"email": "user@test.com", "password": "test", "name": "tester"}'
-curl --verbose --location -X POST "http://localhost:8002/users" --header 'Content-Type: application/json' --data-raw '{"email": "user2@test.com", "password": "test", "name": "tester"}'
+curl --verbose --location -X POST "${OUR_URL}/users" --header 'Content-Type: application/json' --data-raw '{"email": "user@test.com", "password": "test", "name": "tester"}'
+curl --verbose --location -X POST "${OUR_URL}/users" --header 'Content-Type: application/json' --data-raw '{"email": "user2@test.com", "password": "test", "name": "tester2"}'
 # To show login works, automatically put session id into variable (requires you have jq installed)
-export SESSION_ID=`curl --verbose --location -X POST "http://localhost:8002/login" --header 'Content-Type: application/json' --data-raw '{"email": "user@test.com", "password": "test"}' | jq --raw-output .id`
-export SESSION2_ID=`curl --verbose --location -X POST "http://localhost:8002/login" --header 'Content-Type: application/json' --data-raw '{"email": "user2@test.com", "password": "test"}' | jq --raw-output .id`
+export SESSION_ID=`curl --verbose --location -X POST "${OUR_URL}/login" --header 'Content-Type: application/json' --data-raw '{"email": "user@test.com", "password": "test"}' | jq --raw-output .id`
+export SESSION2_ID=`curl --verbose --location -X POST "${OUR_URL}/login" --header 'Content-Type: application/json' --data-raw '{"email": "user2@test.com", "password": "test"}' | jq --raw-output .id`
 # Show it worked...
 echo "Session ID 1: $SESSION_ID"
 echo "Session ID 2: $SESSION2_ID"
 # To show using an logged in endpoint works, lookup who we are without session id first...
-curl --verbose --location "http://localhost:8002/whoami" --header 'Content-Type: application/json'
+curl --verbose --location "${OUR_URL}/whoami" --header 'Content-Type: application/json'  # This will fail, on purpose
+# Now lets show logged in works...
+curl --verbose --location "${OUR_URL}/whoami" --header 'Content-Type: application/json' -H "Authorization: $SESSION_ID"
 # Then try to lookup who we are with our session id, setting it into an environment variable with jq
-export USER_ID=`curl --verbose --location "http://localhost:8002/whoami" --header 'Content-Type: application/json' -H "Authorization: $SESSION_ID" | jq --raw-output .id`
-export USER2_ID=`curl --verbose --location "http://localhost:8002/whoami" --header 'Content-Type: application/json' -H "Authorization: $SESSION2_ID" | jq --raw-output .id`
+export USER_ID=`curl --verbose --location "${OUR_URL}/whoami" --header 'Content-Type: application/json' -H "Authorization: $SESSION_ID" | jq --raw-output .id`
+export USER2_ID=`curl --verbose --location "${OUR_URL}/whoami" --header 'Content-Type: application/json' -H "Authorization: $SESSION2_ID" | jq --raw-output .id`
 # Show it worked...
 echo "User ID 1: $USER_ID"
 echo "User ID 2: $USER2_ID"
 # To show LIST works
-curl --verbose --location "http://localhost:8002/users/" -H "Authorization: $SESSION_ID"
+curl --verbose --location "${OUR_URL}/users/" -H "Authorization: $SESSION_ID"
 # To show GET works, but only for ourself...
-curl --verbose --location "http://localhost:8002/users/$USER_ID" -H "Authorization: $SESSION_ID"
-curl --verbose --location "http://localhost:8002/users/$USER2_ID" -H "Authorization: $SESSION_ID"
+curl --verbose --location "${OUR_URL}/users/$USER_ID" -H "Authorization: $SESSION_ID"
+curl --verbose --location "${OUR_URL}/users/$USER2_ID" -H "Authorization: $SESSION_ID"  # This will fail, on purpose
 # To show patch/put works, but only for ourself...
-curl --verbose --location -X PATCH "http://localhost:8002/users/$USER_ID" -H "Authorization: $SESSION_ID" --header 'Content-Type: application/json' --data-raw '{"email": "new@new.com"}'
-curl --verbose --location -X PATCH "http://localhost:8002/users/$USER2_ID" -H "Authorization: $SESSION_ID" --header 'Content-Type: application/json' --data-raw '{"email": "new@new.com"}'
+curl --verbose --location -X PATCH "${OUR_URL}/users/$USER_ID" -H "Authorization: $SESSION_ID" --header 'Content-Type: application/json' --data-raw '{"email": "new@new.com"}'
+curl --verbose --location -X PATCH "${OUR_URL}/users/$USER2_ID" -H "Authorization: $SESSION_ID" --header 'Content-Type: application/json' --data-raw '{"email": "new@new.com"}'  # This will fail, on purpose
 # To show error handling works, try patch with an invalid id, should return FORBIDDEN same as wrong id
-curl --verbose --location -X PATCH "http://localhost:8002/users/INVALID_VALUE" -H "Authorization: $SESSION_ID" --header 'Content-Type: application/json' --data-raw '{"email": "new@new.com"}'
+curl --verbose --location -X PATCH "${OUR_URL}/users/INVALID_VALUE" -H "Authorization: $SESSION_ID" --header 'Content-Type: application/json' --data-raw '{"email": "new@new.com"}'
 # To show input validation works on patch...
-curl --verbose --location -X PATCH "http://localhost:8002/users/$USER_ID" -H "Authorization: $SESSION_ID" --header 'Content-Type: application/json' --data-raw '{"email": "INVALID_EMAIL"}'
+curl --verbose --location -X PATCH "${OUR_URL}/users/$USER_ID" -H "Authorization: $SESSION_ID" --header 'Content-Type: application/json' --data-raw '{"email": "INVALID_EMAIL"}'
 # To show DELETE works, first try to delete the wrong one, then ours
-curl --verbose --location -X DELETE "http://localhost:8002/users/$USER2_ID" -H "Authorization: $SESSION_ID"
-curl --verbose --location -X DELETE "http://localhost:8002/users/$USER_ID" -H "Authorization: $SESSION_ID"
+curl --verbose --location -X DELETE "${OUR_URL}/users/$USER2_ID" -H "Authorization: $SESSION_ID"  # This will fail on purpose, wrong user id with session
+curl --verbose --location -X DELETE "${OUR_URL}/users/$USER_ID" -H "Authorization: $SESSION_ID"
+curl --verbose --location -X DELETE "${OUR_URL}/users/$USER2_ID" -H "Authorization: $SESSION2_ID"
 ```
 
 
@@ -88,24 +105,27 @@ curl --verbose --location -X DELETE "http://localhost:8002/users/$USER_ID" -H "A
 * A classmethod helper to search through a GSI (GlobalSecondaryIndex) on this model, provided you follow the naming scheme of columnname__index
 * A classmethod helper scan through table's column->contains (simplified)
 * A simplified example of login and using an authorizer (via API keys)
+* Has a working example of how to deploy and use this on AWS directly
+* Add automated code to automatically create the DynamoDB tables on AWS needed for this stack (stolen from the [chalice-workshop](https://chalice-workshop.readthedocs.io))
+* A simplified permissions model (allowing a user to only manage their own User object(s))
+* Make all this repo's table names automatically optionally prefixed by a "stage" name (eg: dev__modelName)
+* Auto-detects what AWS region you've deployed into and uses that in the model region
 
 
-# What this codebase doesn't do
-* It's very barebones in its current iteration
-* It does not deal with permissions/roles/group models
-* It (currently) doesn't provide an example for deploying this into production.  What is fairly standard in the industry is to use Terraform or other Infrastructure as Code utilities to pre-create whatever resources you need (DynamoDB, SQS, etc) and pass those output/object ARNs and variables into this codebase accordingly via a configuration structure
+# What this codebase doesn't do (yet) / TODO
 
-
-## TODO
 These are various TODOs that are things that could be improved, changed, etc.  Contributions are welcome for any of these, but this is mostly a personal list of things I'd like to adjust/improve in this codebase for all our sake/sanity.
 
-* Add working examples of this deploying onto AWS directly
-* Add automated code to automatically create the DynamoDB tables on AWS needed for this stack
-* Add example of SQS topic usage and (ideally) automated creation
-* Make all this repo's table names automatically optionally prefixed by a "stage" name (eg: dev__modelName)
 * Add example endpoint to send an email
 * Add example endpoint to send/receive data from S3 service
-* Enable 2FA
+* Setup swagger - https://github.com/samuelkhtu/aws-chalice-swagger
+* Add postman based on swagger
+* Add testing, ideally fully automated, add Github Action for it?
+* Add example of SQS topic usage and (ideally) automated creation
+* Enable 2FA if user wants to
+* It (currently) doesn't provide an robust example of deploying into production in AWS (eg: Terraform, autoscaling DynamoDB)
+* It does not deal with advanced permissions/roles/group models
+
 
 
 ## Support / Author

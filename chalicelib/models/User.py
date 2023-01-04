@@ -27,8 +27,9 @@ class User( BaseModel ):
     This class represents our User object/model
     """
     class Meta:
-        table_name = 'User'
+        table_name = "{}__User".format(helpers.get_stage())
         host = helpers.get_dynamodb_endpoint()  # This gets our dynamodb endpoint both locally during development and inside AWS Lambda
+        region = helpers.get_deployed_region()
         required_fields  = ["email", "password", "name"]
         validate_fields  = {
             "email": helpers.validateEmail,

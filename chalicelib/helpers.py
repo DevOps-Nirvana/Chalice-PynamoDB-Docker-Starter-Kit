@@ -44,12 +44,17 @@ def validateEmail(email):
 
 # Get the AWS region we are running/deployed in AWS Lambda (or locally use hardcoded us-east-1 as internal/default)
 def get_deployed_region():
-    return get_env_variable('AWS_REGION', "us-east-1")
+    return get_env_variable('AWS_REGION', "us-west-2")
+
+
+# Get the environment (or called stage in Chalice) we're in (eg: dev, stage, prod, dev by default)
+def get_stage():
+    return get_env_variable('STAGE', "local")
 
 
 # Get the AWS DynamoDB Endpoint
 def get_dynamodb_endpoint():
-    return get_env_variable('DYNAMO_ENDPOINT', "dynamodb.{}.amazonaws.com".format(get_deployed_region()))
+    return get_env_variable('DYNAMO_ENDPOINT', "https://dynamodb.{}.amazonaws.com".format(get_deployed_region()))
 
 
 # Encode and decode JSON, for bytes or string...

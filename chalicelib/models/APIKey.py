@@ -10,8 +10,9 @@ class APIKey( BaseModel ):
     This class represents our APIKey object/model
     """
     class Meta:
-        table_name = 'APIKey'
+        table_name = "{}__APIKey".format(helpers.get_stage())
         host = helpers.get_dynamodb_endpoint()  # This gets our dynamodb endpoint both locally during development and inside AWS Lambda
+        region = helpers.get_deployed_region()
 
     id      = UnicodeAttribute(hash_key=True, default=helpers.getDoubleUUID)
     ttl     = TTLAttribute(default=helpers.getTTLExpiration)

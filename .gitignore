@@ -115,3 +115,6 @@ venv.bak/
 
 # Local dynamodb data
 .dynamodb_data
+
+# Random packaged deployments
+*.zip

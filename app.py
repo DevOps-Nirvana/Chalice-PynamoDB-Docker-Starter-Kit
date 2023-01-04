@@ -1,15 +1,20 @@
 # For imports/exceptions see: https://github.com/aws/chalice/blob/master/chalice/__init__.py
 from chalice import Chalice, BadRequestError, ConflictError, NotFoundError, Response, AuthResponse, ForbiddenError, UnauthorizedError
-
 from botocore.client import ClientError
+import json
+import sys
+
+# This injects our chalicelib folder as a path to include from automatically
+sys.path.insert(0,'chalicelib')
 from models.APIKey import APIKey
 from models.User import User
 import helpers
-import json
 
-app = Chalice(app_name='chalice-pynamodb-bootstrap')
+# Our chalice app definition
+app = Chalice(app_name='chalice-pynamodb-starter-kit')
 
 
+# TODO: move these each to their own router/controller files for a cleaner codebase
 # Our health check, for Docker/development purposes, mostly
 @app.route('/healthy')
 def healthy():
@@ -67,10 +72,15 @@ def validate_api_key(auth_request):
         # print("Try to validate auth request...")
         # print(auth_request.method_arn)
         # print(auth_request.token)
+        # print(auth_request)
+        # print("Loading api key")
         api_key = APIKey.get(auth_request.token)
+        # print(api_key)
+        # print("Loading user")
         user = User.get(api_key.user_id)
-        # TODO: Set routes according to permissions
-        return AuthResponse(routes=['*'], principal_id=user)
+        # print(user)
+        # TODO: Set route paths according to user permissions, so it can be cached properly
+        return AuthResponse(routes=['*'], principal_id=user.to_json())
     except Exception as e:
         print("Caught exception during authorizer")
         print(str(e))
@@ -86,8 +96,11 @@ def get_user(id):
     except:
         raise NotFoundError("This id was not found in our system")
 
+    # Load our principal (Json encoded user)
+    principal = json.loads(app.current_request.context['authorizer']['principalId'])
+
     # Check if it's us we are querying
-    if user.id != app.current_request.context['authorizer']['principalId'].id:
+    if user.id != principal['id']:
         raise ForbiddenError("You do not have permissions to use this")
 
     return user.to_json_safe()
@@ -115,8 +128,11 @@ def update_user(id):
         raise ForbiddenError("You do not have permissions to use this")
         # raise NotFoundError("This id was not found in our system")
 
+    # Load our principal (Json encoded user)
+    principal = json.loads(app.current_request.context['authorizer']['principalId'])
+
     # Check if it's us we are updating
-    if user.id != app.current_request.context['authorizer']['principalId'].id:
+    if user.id != principal['id']:
         raise ForbiddenError("You do not have permissions to use this")
 
     # Update attributes
@@ -136,8 +152,11 @@ def delete_user(id):
         raise ForbiddenError("You do not have permissions to use this")
         # raise NotFoundError("This id was not found in our system")
 
+    # Load our principal (Json encoded user)
+    principal = json.loads(app.current_request.context['authorizer']['principalId'])
+
     # Check if it's us we are deleting
-    if user.id != app.current_request.context['authorizer']['principalId'].id:
+    if user.id != principal['id']:
         raise ForbiddenError("You do not have permissions to use this")
 
     # TODO: Should consider also deleting all (soft) FK'd resources (eg: API Keys)
@@ -154,4 +173,4 @@ def delete_user(id):
 # Tells you who you are
 @app.route('/whoami', methods=['GET'], authorizer=validate_api_key)
 def whoami():
-    return app.current_request.context['authorizer']['principalId'].to_json_safe()
+    return app.current_request.context['authorizer']['principalId']

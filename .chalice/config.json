@@ -1,9 +1,26 @@
 {
   "version": "2.0",
-  "app_name": "chalice-pynamodb-bootstrap",
+  "app_name": "chalice-pynamodb-starter-kit",
+  "environment_variables": {
+    "SHARED_CONFIG_VARIABLE": "foo"
+  },
   "stages": {
     "dev": {
-      "api_gateway_stage": "api"
+      "environment_variables": {
+        "STAGE": "dev",
+        "USER_TABLE": "dev__User",
+        "APIKEY_TABLE": "dev__APIKey"
+      },
+      "api_gateway_stage": "api",
+      "autogen_policy": false,
+      "iam_policy_file": "policy-dev.json"
+    },
+    "local": {
+      "environment_variables": {
+        "STAGE": "local",
+        "USER_TABLE": "local__User",
+        "APIKEY_TABLE": "local__APIKey"
+      }
     }
   }
 }

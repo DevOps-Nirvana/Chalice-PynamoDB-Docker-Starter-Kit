@@ -116,7 +116,7 @@ services:
       - /bin/sh
     command:
       - "-c"
-      - "python3 migrate.py && touch /tmp/finished-migrations && sleep 100000000000"
+      - "python3 migrate.py -s local -r us-east-1 && touch /tmp/finished-migrations && sleep 100000000000"
     healthcheck:
       test: ls /tmp/finished-migrations
       interval: 5s
@@ -130,6 +130,8 @@ services:
         context: .
         dockerfile: Dockerfile
       environment:
+        # This is our deploy environment name, could also be "dev" for local development, arguably, but we'll keep "dev" for hosted on AWS
+        STAGE: "local"
         # This is to cause python to instantly echo/print stuff out to stdout, not buffer
         PYTHONDONTWRITEBYTECODE: "1"
         PYTHONUNBUFFERED: "1"
@@ -156,6 +158,9 @@ services:
     <<: *autoRestartOnFailure
     <<: *globalAppSettings
     container_name: app
+    entrypoint:
+      - chalice
+    command: ["local", "--host", "0.0.0.0", "--port", "8002", "--stage", "local", "--autoreload"]
     ports:
       - "8002:8002"
     depends_on:

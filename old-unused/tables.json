@@ -1,0 +1,52 @@
+{
+  "Resources" : {
+    "User" : {
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "TableName" : "User",
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "id",
+            "AttributeType" : "S"
+          },
+          {
+            "AttributeName" : "email",
+            "AttributeType" : "S"
+          },
+          {
+            "AttributeName" : "password",
+            "AttributeType" : "B"
+          },
+          {
+            "AttributeName" : "password_salt",
+            "AttributeType" : "B"
+          },
+          {
+            "AttributeName" : "name",
+            "AttributeType" : "S"
+          }
+        ],
+        "KeySchema" : [
+          {
+            "AttributeName" : "id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "1",
+          "WriteCapacityUnits" : "1"
+        }
+      }
+    },
+    "APIHandler": {
+      "Properties": {
+        "Environment": {
+          "Variables": {
+            "USER_TABLE": {"Ref": "User"},
+            "FARLEYTEST": "Test"
+          }
+        }
+      }
+    }
+  }
+}
