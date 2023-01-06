@@ -56,6 +56,8 @@ export OUR_URL=http://localhost:8002
 # If deploying to AWS copy/paste from output of chalice deploy, minus the last /
 export OUR_URL=https://dlxlj8umy3.execute-api.us-west-2.amazonaws.com/api  #<---- NOTE REPLACE-ME-AFTER-YOU-DEPLOY-TO-AWS!!!
 
+# Show that our service is online
+curl --verbose --location "${OUR_URL}/healthy"
 # Trying to create a user with missing data
 curl --verbose --location -X POST "${OUR_URL}/users" --header 'Content-Type: application/json' --data-raw '{"email": "invalid.email.address", "password": "test"}'
 # Trying an invalid email, showing exception handling
