@@ -110,6 +110,7 @@ curl --verbose --location -X DELETE "${OUR_URL}/users/$USER2_ID" -H "Authorizati
 * A simplified permissions model (allowing a user to only manage their own User object(s))
 * Make all this repo's table names automatically optionally prefixed by a "stage" name (eg: dev__modelName)
 * Auto-detects what AWS region you've deployed into and uses that in the model region
+* Automatically adds all routes from the routes folder, a nice(r) way to keep an chalice app DRY and simple to support/develop on
 
 
 # What this codebase doesn't do (yet) / TODO

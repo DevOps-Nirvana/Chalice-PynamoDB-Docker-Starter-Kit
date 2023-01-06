@@ -19,7 +19,8 @@
       "environment_variables": {
         "STAGE": "local",
         "USER_TABLE": "local__User",
-        "APIKEY_TABLE": "local__APIKey"
+        "APIKEY_TABLE": "local__APIKey",
+        "WORKFLOW_TABLE": "local__Workflow"
       }
     }
   }
