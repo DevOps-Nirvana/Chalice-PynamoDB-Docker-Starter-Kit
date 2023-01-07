@@ -1,15 +1,18 @@
+import sys
+
+# This injects our chalicelib folder as a path to include from automatically
+sys.path.insert(0,'chalicelib')
+
 from models.User import User
 from models.APIKey import APIKey
 
-print("Adding User to the table...")
-user = User(email="test@test.com", name="tester1")
-user.set_attributes({'password': 'test'})
+print("Adding user...")
+user = User.createFromDict({'email': 'test@test.com', 'name': 'tester1', 'password': 'test'})
 user.save()
 print(user)
 
-print("Adding User2 to the table...")
-user2 = User(email="test2@test.com", name="tester2")
-user2.set_attributes({'password': 'test'})
+print("Adding user2...")
+user2 = User.createFromDict({'email': 'test2@test.com', 'name': 'tester2', 'password': 'test'})
 user2.save()
 print(user2)
 

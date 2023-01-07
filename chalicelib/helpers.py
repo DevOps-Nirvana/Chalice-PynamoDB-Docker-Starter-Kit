@@ -9,6 +9,18 @@ import hashlib
 import base64
 # For date/time manipulation
 from datetime import datetime, timedelta, timezone
+# Allows a singleton version of chalice "app" object to be reused everywhere
+from chalice import Chalice
+
+
+# Allows a singleton version of chalice "app" object to be reused everywhere
+cached_chalice_app = None
+def get_chalice_app():
+    global cached_chalice_app
+    if cached_chalice_app == None:
+        # Our chalice app definition
+        cached_chalice_app = Chalice(app_name='chalice-pynamodb-starter-kit')
+    return cached_chalice_app
 
 
 # A helper to get an env variable with a fallback
