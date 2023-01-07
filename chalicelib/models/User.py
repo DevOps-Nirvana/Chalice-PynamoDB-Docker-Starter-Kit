@@ -1,6 +1,5 @@
 from pynamodb.attributes import UnicodeAttribute, NumberAttribute, BinaryAttribute
 from pynamodb.indexes import GlobalSecondaryIndex, KeysOnlyProjection, AllProjection
-from botocore.client import ClientError
 from .BaseModel import BaseModel
 import helpers
 import hmac

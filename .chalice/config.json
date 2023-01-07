@@ -9,7 +9,8 @@
       "environment_variables": {
         "STAGE": "dev",
         "USER_TABLE": "dev__User",
-        "APIKEY_TABLE": "dev__APIKey"
+        "APIKEY_TABLE": "dev__APIKey",
+        "WORKFLOW_TABLE": "dev__Workflow"
       },
       "api_gateway_stage": "api",
       "autogen_policy": false,

@@ -16,3 +16,6 @@ for item in modules:
     filename = item.split('/')[-1].split('.')[0]
     # print(f"Adding routes from {filename}...")
     mod = import_module(f".{filename}", "routes")
+
+# Our validate API key logic must be present in this file for some reason otherwise chalice freaks out on AWS Lambda (only)
+from routes.internal__routes import validate_api_key

@@ -1,5 +1,4 @@
-from chalice import BadRequestError
-from botocore.client import ClientError
+from chalice import BadRequestError, NotFoundError
 from pynamodb.models import Model
 from pynamodb.util import attribute_value_to_json
 import helpers
@@ -96,7 +95,7 @@ class BaseModel( Model ):
         if max_results == 1:
             if len(output) >= 1:
                 return output[0]
-            raise ClientError({'Error': {'Code': 'ResourceNotFoundException', 'Message': 'Not Found'}}, "getByIndex")
+            raise NotFoundError({'Error': {'Code': 'ResourceNotFoundException', 'Message': 'Not Found'}}, "getByIndex")
         return output
 
 
@@ -162,5 +161,5 @@ class BaseModel( Model ):
         if max_results == 1:
             if len(output) >= 1:
                 return output[0]
-            raise ClientError({'Error': {'Code': 'ResourceNotFoundException', 'Message': 'Not Found'}}, "getByField")
+            raise NotFoundError({'Error': {'Code': 'ResourceNotFoundException', 'Message': 'Not Found'}}, "getByField")
         return output

@@ -1,6 +1,5 @@
 # For imports/exceptions see: https://github.com/aws/chalice/blob/master/chalice/__init__.py
-from chalice import ConflictError, NotFoundError, Response, ForbiddenError, UnauthorizedError
-from botocore.client import ClientError
+from chalice import ConflictError, NotFoundError, Response, ForbiddenError, UnauthorizedError, NotFoundError
 import json
 
 # Grabbing our models and our validate functions/helpers
@@ -19,8 +18,8 @@ def create_user():
     # Validate not a duplicate
     try:
         user = User.getByIndex('email', app.current_request.json_body['email'])
-        raise ConflictError('This email already exists in our system')
-    except ClientError as e:
+        raise NotFoundError('This email already exists in our system')
+    except NotFoundError as e:
         if "ResourceNotFoundException" not in str(e):
             raise
 
