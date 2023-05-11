@@ -2,9 +2,9 @@
 
 This code is/was originally from: [Chalice-PynamoDB-Docker-Starter-Kit](https://github.com/DevOps-Nirvana/Chalice-PynamoDB-Docker-Starter-Kit/)
 
-This repo makes a great boilerplate/foundation/bootstrap/starter kit to help you get started with AWS's [DynamoDB](https://aws.amazon.com/dynamodb/), Python's [PynamoDB](https://github.com/pynamodb/PynamoDB/), and [AWS's Chalice](https://github.com/aws/chalice) quickly which orchestrates creating and deploying an REST API on [AWS Lambda](https://aws.amazon.com/lambda/) and [AWS API Gateway](https://aws.amazon.com/api-gateway/).  Combined, this makes an easy to use boilerplate for architecting an application on AWS using technologies that are serverless-friendly and operate at very little cost.
+This repo makes a great boilerplate/foundation/bootstrap/starter kit to help you get started with AWS's [DynamoDB](https://aws.amazon.com/dynamodb/), Python's [PynamoDB](https://github.com/pynamodb/PynamoDB/), and [AWS's Chalice](https://github.com/aws/chalice) quickly, which orchestrates creating and deploying a REST API on [AWS Lambda](https://aws.amazon.com/lambda/) and [AWS API Gateway](https://aws.amazon.com/api-gateway/).  Combined, this makes an easy to use boilerplate for architecting an application on AWS using technologies that are serverless-friendly and operate at very little cost.
 
-This is my personal boilerplate for numerous personal and professional serverless applications on AWS.  This repository is an example of my work and of numerous best-practices of both my own and of the industry.
+This is my own boilerplate for numerous personal and professional serverless applications on AWS.  This repository is an example of my work and of numerous best-practices of both my own and of the industry.
 
  * An example of [Dockerfile best-practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/) see [Dockerfile](./Dockerfile)
  * An example of Docker Compose best-practices for ease of understanding, support, development, migrations, services, health checks, auto-restarting upon failures, auto-reload upon code changes, and keeping your Docker Compose file as DRY as possible with all the features and complexity with [YAML anchors](https://www.educative.io/blog/advanced-yaml-syntax-cheatsheet#anchors).  See [docker-compose.yml](./docker-compose.yml)
@@ -12,18 +12,18 @@ This is my personal boilerplate for numerous personal and professional serverles
 
 
 ## Requirements
-Because of Docker, you don't even need to have Python installed, all you need is...
+Because of Docker, you don't even need to have Python installed, all you need is:
 
 * To have installed and running [Docker](https://docs.docker.com/get-docker/)
-* Install Docker Compose (via [plugin](https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin) or [standalone](https://docs.docker.com/compose/install/other/))
+* To install Docker Compose (via [plugin](https://docs.docker.com/compose/install/#scenario-two-install-the-compose-plugin) or [standalone](https://docs.docker.com/compose/install/other/))
 
 
 ## How to use this repo
 
-There are 2 modes in which you can run the application in, primarily though, this codebase is meant for local docker development and experimentation.
+There are 2 modes in which you can run the application. Primarily though, this codebase is meant for local Docker development and experimentation.
 
 ### 1. Docker-Compose Local Development Mode
-With Docker Compose we can run a local development version of the entire stack, the main purpose of this codebase.  This will spin up the various services needed such as an SMTP server, S3 Server (optional/disabled), DynamoDB server, an DynamoDB web admin, run database migrations, and then startup our application.
+With Docker Compose we can run a local development version of the entire stack, the main purpose of this codebase.  This will spin up the various services needed (such as a SMTP server, S3 Server (optional/disabled), DynamoDB server, DynamoDB web admin), run database migrations, and then startup our application.
 
 ```bash
 # Simply run this if you installed Docker Compose as a plugin
@@ -33,7 +33,7 @@ docker-compose up
 ```
 
 ### 2. Cloud-Hosted / Production Mode
-Simply run `chalice deploy` to deploy this into your AWS account.  Your AWS CLI must be setup and configured to talk to your desired AWS Account.  Note: This will require you install Python and Chalice on your computer, or that you shell into your "app" container and run it from there.
+Simply run `chalice deploy` to deploy this into your AWS account. Your AWS CLI must be set up and configured to talk to your desired AWS Account. Note: This will require you install Python and Chalice on your computer, or that you shell into your "app" container and run it from there.
 
 **WARNING**: If you are to use this in production/cloud mode, you will need to remove the `host = "http://dynamodb:8000"` in every model for it to be able to talk to AWS's hosted DynamoDB properly.
 
@@ -44,16 +44,16 @@ export AWS_REGION=us-west-2
 python3 migrate.py -s dev -r us-west-2
 # Then you'll deploy to the dev stage
 chalice deploy --stage dev
-# Then you should be able to paste the URL it gives you instead of OUR_URL below in examples of usage and use it!
+# Then you should be able to paste the URL it gives you, instead of OUR_URL below in examples of usage, and use it!
 ```
 
 ## Examples of usage
-Once your docker compose application is up, some of the following examples will highlight the features/examples/foundation in this codebase
+Once your Docker Compose application is up, some of the following examples will highlight the features/examples/foundation of this codebase
 
 ```bash
 # If using local...
 export OUR_URL=http://localhost:8002
-# If deploying to AWS copy/paste from output of chalice deploy, minus the last /
+# If deploying to AWS copy/paste from output of Chalice deploy, minus the last /
 export OUR_URL=https://dlxlj8umy3.execute-api.us-west-2.amazonaws.com/api  #<---- NOTE REPLACE-ME-AFTER-YOU-DEPLOY-TO-AWS!!!
 
 # Show that our service is online
@@ -62,7 +62,7 @@ curl --verbose --location "${OUR_URL}/healthy"
 curl --verbose --location -X POST "${OUR_URL}/users" --header 'Content-Type: application/json' --data-raw '{"email": "invalid.email.address", "password": "test"}'
 # Trying an invalid email, showing exception handling
 curl --verbose --location -X POST "${OUR_URL}/users" --header 'Content-Type: application/json' --data-raw '{"email": "invalid.email.address", "password": "test", "name": "tester"}'
-# Trying with an valid email...
+# Trying with a valid email...
 curl --verbose --location -X POST "${OUR_URL}/users" --header 'Content-Type: application/json' --data-raw '{"email": "user@test.com", "password": "test", "name": "tester"}'
 curl --verbose --location -X POST "${OUR_URL}/users" --header 'Content-Type: application/json' --data-raw '{"email": "user2@test.com", "password": "test", "name": "tester2"}'
 # To show login works, automatically put session id into variable (requires you have jq installed)
@@ -71,9 +71,9 @@ export SESSION2_ID=`curl --verbose --location -X POST "${OUR_URL}/login" --heade
 # Show it worked...
 echo "Session ID 1: $SESSION_ID"
 echo "Session ID 2: $SESSION2_ID"
-# To show using an logged in endpoint works, lookup who we are without session id first...
+# To show using a logged in endpoint works, lookup who we are without session id first...
 curl --verbose --location "${OUR_URL}/whoami" --header 'Content-Type: application/json'  # This will fail, on purpose
-# Now lets show logged in works...
+# Now let's show logged in works...
 curl --verbose --location "${OUR_URL}/whoami" --header 'Content-Type: application/json' -H "Authorization: $SESSION_ID"
 # Then try to lookup who we are with our session id, setting it into an environment variable with jq
 export USER_ID=`curl --verbose --location "${OUR_URL}/whoami" --header 'Content-Type: application/json' -H "Authorization: $SESSION_ID" | jq --raw-output .id`
@@ -111,8 +111,8 @@ curl --verbose --location -X DELETE "${OUR_URL}/users/$USER2_ID" -H "Authorizati
 * Add automated code to automatically create the DynamoDB tables on AWS needed for this stack (stolen from the [chalice-workshop](https://chalice-workshop.readthedocs.io))
 * A simplified permissions model (allowing a user to only manage their own User object(s))
 * Make all this repo's table names automatically optionally prefixed by a "stage" name (eg: dev__modelName)
-* Auto-detects what AWS region you've deployed into and uses that in the model region
-* Automatically adds all routes from the routes folder, a nice(r) way to keep an chalice app DRY and simple to support/develop on
+* Auto-detects what AWS region you've deployed into, and uses that in the model region
+* Automatically adds all routes from the routes folder, a nice(r) way to keep a Chalice app DRY and simple to support/develop on
 
 
 # What this codebase doesn't do (yet) / TODO
@@ -121,8 +121,8 @@ These are various TODOs that are things that could be improved, changed, etc.  C
 
 * Add example endpoint to send an email
 * Add example endpoint to send/receive data from S3 service
-* Setup swagger - https://github.com/samuelkhtu/aws-chalice-swagger
-* Add postman based on swagger
+* Setup Swagger - https://github.com/samuelkhtu/aws-chalice-swagger
+* Add postman based on Swagger
 * Add testing, ideally fully automated, add Github Action for it?
 * Add example of SQS topic usage and (ideally) automated creation
 * Enable 2FA if user wants to
